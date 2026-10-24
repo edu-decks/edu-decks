@@ -67,15 +67,15 @@ async function exportStoreIcons() {
   fs.copyFileSync(geometryStorePath, geometryLandingPath);
   console.log('✅ Exported full-bleed Geometry Deck store icon (512x512)');
 
-  // 5. States Deck Icon (512x512 full-bleed Warm Cream)
+  // 5. US States Deck Icon (512x512 full-bleed Warm Cream)
   const statesIcon = page.locator('#icon-states');
-  const statesStorePath = path.join(root, 'store-assets/states-deck/app-icon-512x512.png');
-  const statesLandingPath = path.join(root, 'apps/landing-page/public/screenshots/states/app-icon-512x512.png');
+  const statesStorePath = path.join(root, 'store-assets/us-states-deck/app-icon-512x512.png');
+  const statesLandingPath = path.join(root, 'apps/landing-page/public/screenshots/us-states/app-icon-512x512.png');
   fs.mkdirSync(path.dirname(statesStorePath), { recursive: true });
   fs.mkdirSync(path.dirname(statesLandingPath), { recursive: true });
   await statesIcon.screenshot({ path: statesStorePath });
   fs.copyFileSync(statesStorePath, statesLandingPath);
-  console.log('✅ Exported full-bleed States Deck store icon (512x512)');
+  console.log('✅ Exported full-bleed US States Deck store icon (512x512)');
 
   // -------------------------------------------------------------------------
   // Part 1b: Google Play Feature Graphics (1024x500)
@@ -90,7 +90,7 @@ async function exportStoreIcons() {
   await featureGeometry.screenshot({ path: path.join(root, 'store-assets/geometry-deck/feature-graphic-1024x500.png') });
 
   const featureStates = page.locator('#feature-states');
-  await featureStates.screenshot({ path: path.join(root, 'store-assets/states-deck/feature-graphic-1024x500.png') });
+  await featureStates.screenshot({ path: path.join(root, 'store-assets/us-states-deck/feature-graphic-1024x500.png') });
   console.log('✅ Generated Google Play 1024x500 Feature Graphics for all decks');
 
   // -------------------------------------------------------------------------
@@ -184,8 +184,8 @@ async function exportStoreIcons() {
   await sharp(geometryTransTemp).resize(32, 32).png().toFile(path.join(geometryPublic, 'favicon.ico'));
   console.log('✅ Generated Geometry Deck web & app icons');
 
-  // --- States Deck Web Assets ---
-  const statesPublic = path.join(root, 'apps/states-deck/public');
+  // --- US States Deck Web Assets ---
+  const statesPublic = path.join(root, 'apps/us-states-deck/public');
   await sharp(statesTransTemp).resize(512, 512).png().toFile(path.join(statesPublic, 'logo.png'));
   await sharp(statesStorePath).resize(512, 512).png().toFile(path.join(statesPublic, 'icon-512.png'));
   await sharp(statesStorePath).resize(512, 512).png().toFile(path.join(statesPublic, 'icon-maskable-512.png'));
@@ -194,7 +194,7 @@ async function exportStoreIcons() {
   await sharp(statesTransTemp).resize(32, 32).png().toFile(path.join(statesPublic, 'favicon-32x32.png'));
   await sharp(statesTransTemp).resize(16, 16).png().toFile(path.join(statesPublic, 'favicon-16x16.png'));
   await sharp(statesTransTemp).resize(32, 32).png().toFile(path.join(statesPublic, 'favicon.ico'));
-  console.log('✅ Generated States Deck web & app icons');
+  console.log('✅ Generated US States Deck web & app icons');
 
   // -------------------------------------------------------------------------
   // Part 4: Native iOS (1024x1024) & Android Launcher Mipmaps

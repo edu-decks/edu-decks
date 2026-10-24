@@ -123,30 +123,30 @@ const APPS: AppInfo[] = [
     ],
   },
   {
-    id: "states",
-    title: "States Deck",
-    subtitle: "US States, Capitals & Regions",
+    id: "us-states",
+    title: "US States Deck",
+    subtitle: "States, Capitals & Regions",
     ageRange: "Ages 7–12 (2nd to 6th)",
     description:
       "Learn all 50 US states, capitals, regions, and state outlines with interactive maps and multiple-choice quizzes.",
-    webUrl: "https://states.edudecks.org/?ref=landing",
+    webUrl: "https://us-states.edudecks.org/?ref=landing",
     primaryButtonClass: DECK_COLORS.emerald.btn,
     accentBorder: "border-t-emerald-500",
     screenshots: [
       {
         label: "States",
-        src: "/screenshots/states/landscape-1-card-front.png",
-        srcDark: "/screenshots/states/landscape-1-card-front-dark.png",
+        src: "/screenshots/us-states/landscape-1-card-front.png",
+        srcDark: "/screenshots/us-states/landscape-1-card-front-dark.png",
       },
       {
         label: "Capitals",
-        src: "/screenshots/states/landscape-2-card-back.png",
-        srcDark: "/screenshots/states/landscape-2-card-back-dark.png",
+        src: "/screenshots/us-states/landscape-2-card-back.png",
+        srcDark: "/screenshots/us-states/landscape-2-card-back-dark.png",
       },
       {
         label: "Quiz",
-        src: "/screenshots/states/landscape-3-quiz-mode.png",
-        srcDark: "/screenshots/states/landscape-3-quiz-mode-dark.png",
+        src: "/screenshots/us-states/landscape-3-quiz-mode.png",
+        srcDark: "/screenshots/us-states/landscape-3-quiz-mode-dark.png",
       },
     ],
   },
@@ -159,7 +159,7 @@ export default function HomePage() {
     arithmetic: 0,
     reading: 0,
     geometry: 0,
-    states: 0,
+    "us-states": 0,
   });
 
   const handleSelectScreenshot = (appId: string, index: number) => {

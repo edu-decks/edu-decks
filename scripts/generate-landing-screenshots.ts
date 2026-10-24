@@ -394,12 +394,12 @@ async function generateLandingScreenshots() {
   console.log('Saved: geometry/landscape-3-quiz-mode-dark.png');
 
   // ==========================================
-  // 4. STATES DECK (9006)
+  // 4. US STATES DECK (9006)
   // ==========================================
-  const statesDir = path.join(root, 'apps/landing-page/public/screenshots/states');
+  const statesDir = path.join(root, 'apps/landing-page/public/screenshots/us-states');
   fs.mkdirSync(statesDir, { recursive: true });
 
-  console.log('Capturing States Deck screenshots (Light & Dark)...');
+  console.log('Capturing US States Deck screenshots (Light & Dark)...');
   await page.goto('http://localhost:9006');
   await page.waitForSelector('main');
   await page.waitForTimeout(600);

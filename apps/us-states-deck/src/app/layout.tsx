@@ -10,13 +10,13 @@ const lexend = Lexend({
 });
 
 export const metadata: Metadata = {
-  title: "States & Capitals Deck — US Geography & Map Flashcards",
+  title: "US States Deck — States, Capitals & Regions Flashcards",
   description:
     "Master all 50 US states, capitals, regions, and state shapes with interactive maps, flashcards, and multiple-choice quizzes.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "States Deck",
+    title: "US States Deck",
   },
 };
 

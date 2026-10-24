@@ -503,7 +503,7 @@ importers:
         specifier: ^5
         version: 5.9.3
 
-  apps/states-deck:
+  apps/us-states-deck:
     dependencies:
       '@capacitor/core':
         specifier: ^8.5.0
