@@ -3,6 +3,7 @@
 import { RegionType, CardMode } from "@/lib/types";
 import {
   ALL_REGIONS,
+  REGION_COLORS,
   REGION_LABELS,
   REGION_COUNTS,
   ALL_CARD_MODES,
@@ -79,7 +80,7 @@ export function TopicSelector({
         {/* Mobile sticky header with close button */}
         <div className="flex items-center justify-end p-4 border-b sm:hidden sticky top-0 bg-background z-10">
           <h4 className="font-medium font-headline text-lg mr-auto">
-            States Deck
+            US States Deck
           </h4>
           <Button
             variant="ghost"
@@ -113,6 +114,7 @@ export function TopicSelector({
                 const isActive = activeRegions.includes(region);
                 const label = REGION_LABELS[region];
                 const count = REGION_COUNTS[region];
+                const regionColor = REGION_COLORS[region];
 
                 return (
                   <div
@@ -120,9 +122,12 @@ export function TopicSelector({
                     className={cn(
                       "h-12 rounded-xl flex items-center justify-between gap-2 pl-2.5 pr-2.5 transition-all select-none border group cursor-pointer",
                       isActive
-                        ? "bg-primary text-primary-foreground shadow-sm border-transparent"
+                        ? "text-white shadow-sm border-transparent"
                         : "text-muted-foreground border-border bg-card hover:bg-accent hover:text-accent-foreground"
                     )}
+                    style={{
+                      backgroundColor: isActive ? regionColor : undefined,
+                    }}
                     onClick={() => {
                       if (onRegionSelectExclusive) {
                         onRegionSelectExclusive(region);
