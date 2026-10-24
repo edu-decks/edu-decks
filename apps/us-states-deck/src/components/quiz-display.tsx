@@ -230,12 +230,12 @@ export function QuizDisplay({
       input={
         <div
           className={cn(
-            "w-full grid p-1",
+            "w-full grid grid-cols-2 p-1",
             options.length <= 4
-              ? "grid-cols-2 gap-3 sm:gap-4"
+              ? "gap-3 sm:gap-4"
               : options.length <= 6
-              ? "grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3.5"
-              : "grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3"
+              ? "gap-2.5 sm:gap-3"
+              : "gap-2 sm:gap-2.5"
           )}
         >
           {options.map((opt) => {
@@ -248,12 +248,12 @@ export function QuizDisplay({
                 key={opt.value}
                 type="button"
                 className={cn(
-                  "w-full rounded-2xl sm:rounded-3xl flex flex-col items-center justify-center font-headline font-bold shadow-md transition-all active:scale-95 relative overflow-hidden border-2 px-3 py-2.5 text-center select-none",
+                  "w-full rounded-2xl sm:rounded-3xl flex flex-col items-center justify-center font-headline font-bold shadow-md transition-all active:scale-95 relative overflow-hidden border-2 px-3 py-2 text-center select-none",
                   options.length <= 4
                     ? "min-h-[76px] sm:min-h-[96px]"
                     : options.length <= 6
-                    ? "min-h-[68px] sm:min-h-[84px]"
-                    : "min-h-[60px] sm:min-h-[76px]",
+                    ? "min-h-[60px] sm:min-h-[72px]"
+                    : "min-h-[50px] sm:min-h-[60px]",
                   isSelectedCorrect &&
                     "bg-emerald-500 text-white scale-[1.03] border-emerald-300 z-10 shadow-xl shadow-emerald-500/30",
                   isSelectedIncorrect &&
