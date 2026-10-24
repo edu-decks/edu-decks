@@ -13,7 +13,7 @@ export const REGION_COLORS: Record<RegionType, string> = {
   northeast: DECK_COLORS.sky.hex,
   southeast: DECK_COLORS.amber.hex,
   midwest: DECK_COLORS.emerald.hex,
-  southwest: DECK_COLORS.orange.hex,
+  southwest: DECK_COLORS.rose.hex,
   west: DECK_COLORS.purple.hex,
 };
 
