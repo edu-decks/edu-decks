@@ -32,6 +32,10 @@ EduDecks operates three distinct environments across all applications (`landing-
   * Dev: `geometry-dev.edudecks.org` (Branch: `main`)
   * Staging: `geometry-staging.edudecks.org` (Branch: `main`)
   * Prod: `geometry.edudecks.org` (Branch: `prod`)
+* **States Deck (`apps/states-deck`)**:
+  * Dev: `states-dev.edudecks.org` (Branch: `main`)
+  * Staging: `states-staging.edudecks.org` (Branch: `main`)
+  * Prod: `states.edudecks.org` (Branch: `prod`)
 
 ---
 

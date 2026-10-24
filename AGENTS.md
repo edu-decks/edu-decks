@@ -7,7 +7,7 @@ This file defines mandatory behavioral constraints and operational workflows for
 ## 🚨 CRITICAL OPERATIONAL RULES
 
 ### 1. DO NOT KILL OR CORRUPT LOCAL DEVELOPMENT SERVERS
-- **NEVER** run `kill`, `killall`, `pkill`, or `lsof ... | kill -9` on processes listening on ports `9000` (`landing-page`), `9002` (`reading-deck`), `9003` (`arithmetic-deck`), or `9004` (`geometry-deck`).
+- **NEVER** run `kill`, `killall`, `pkill`, or `lsof ... | kill -9` on processes listening on ports `9000` (`landing-page`), `9002` (`reading-deck`), `9003` (`arithmetic-deck`), `9004` (`geometry-deck`), or `9006` (`states-deck`).
 - **NEVER** terminate a running `pnpm dev` process.
 - **NEVER** run `next build` or `pnpm -r build` while `pnpm dev` is running. Running `next build` concurrently overwrites the active `.next` cache and build manifests with production bundles, corrupting the dev server and causing `500 Internal Server Error`.
 - Both `apps/arithmetic-deck/playwright.config.ts`, `apps/reading-deck/playwright.config.ts`, and `apps/geometry-deck/playwright.config.ts` are configured with `reuseExistingServer: true`. Automated visual regression tests (`pnpm -r test:visual`) will automatically attach to and reuse any already-running development server.
@@ -61,4 +61,5 @@ This file defines mandatory behavioral constraints and operational workflows for
 - `apps/reading-deck` (Port `9002`) — Phonics, Letters, & Reading Fluency
 - `apps/geometry-deck` (Port `9004`) — Geometry Formulas, Properties & Theorems (geometry.edudecks.org)
 - `apps/dev-site` (Port `9005`) — Internal Core Showcase & Card Reveal Height Lab
+- `apps/states-deck` (Port `9006`) — US States, Capitals & Regions (states.edudecks.org)
 - `packages/deck-core` — Shared UI shells, toolbars, quiz overlays, badges, audio & wake-lock hooks

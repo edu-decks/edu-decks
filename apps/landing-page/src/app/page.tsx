@@ -122,6 +122,34 @@ const APPS: AppInfo[] = [
       },
     ],
   },
+  {
+    id: "states",
+    title: "States Deck",
+    subtitle: "US States, Capitals & Regions",
+    ageRange: "Ages 7–12 (2nd to 6th)",
+    description:
+      "Learn all 50 US states, capitals, regions, and state outlines with interactive maps and multiple-choice quizzes.",
+    webUrl: "https://states.edudecks.org/?ref=landing",
+    primaryButtonClass: DECK_COLORS.emerald.btn,
+    accentBorder: "border-t-emerald-500",
+    screenshots: [
+      {
+        label: "States",
+        src: "/screenshots/states/landscape-1-card-front.png",
+        srcDark: "/screenshots/states/landscape-1-card-front-dark.png",
+      },
+      {
+        label: "Capitals",
+        src: "/screenshots/states/landscape-2-card-back.png",
+        srcDark: "/screenshots/states/landscape-2-card-back-dark.png",
+      },
+      {
+        label: "Quiz",
+        src: "/screenshots/states/landscape-3-quiz-mode.png",
+        srcDark: "/screenshots/states/landscape-3-quiz-mode-dark.png",
+      },
+    ],
+  },
 ];
 
 export default function HomePage() {
@@ -131,6 +159,7 @@ export default function HomePage() {
     arithmetic: 0,
     reading: 0,
     geometry: 0,
+    states: 0,
   });
 
   const handleSelectScreenshot = (appId: string, index: number) => {
@@ -193,7 +222,7 @@ export default function HomePage() {
         </section>
 
         {/* 2. Deck Cards Showcase */}
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
           {APPS.map((app) => {
             const currentIdx = selectedScreenshots[app.id] ?? 0;
             const currentScreenshot =

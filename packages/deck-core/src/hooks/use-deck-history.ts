@@ -34,11 +34,8 @@ export function useDeckHistory<TItem>({
       setIsFlipped(false);
       setShowHint(false);
       const newItem = generateNext();
-      setHistory((prev) => {
-        const nextHist = [...prev, newItem];
-        setHistoryIndex(nextHist.length - 1);
-        return nextHist;
-      });
+      setHistory((prev) => [...prev, newItem]);
+      setHistoryIndex((i) => i + 1);
       setCardCount((c) => c + 1);
 
       if (autoPlayAudio && !isQuizActive && autoPlay && speak) {

@@ -2,7 +2,7 @@
 
 An interactive, distraction-free educational flashcard suite built for early learners and adults to explore together. Built with **Next.js 15**, **React 19**, **Tailwind CSS**, **Capacitor 8**, and **pnpm workspaces**.
 
-**Live Apps**: [EduDecks Portal](https://edudecks.org) · [Geometry Deck](https://geometry.edudecks.org) · [Reading Deck](https://reading.edudecks.org) · [Arithmetic Deck](https://arithmetic.edudecks.org)
+**Live Apps**: [EduDecks Portal](https://edudecks.org) · [Geometry Deck](https://geometry.edudecks.org) · [States Deck](https://states.edudecks.org) · [Reading Deck](https://reading.edudecks.org) · [Arithmetic Deck](https://arithmetic.edudecks.org)
 
 ---
 
@@ -15,6 +15,7 @@ EduDecks apps are interactive flash cards made for practicing together. Each dec
 
 ### The EduDecks Suite
 - **[Geometry Deck](https://geometry.edudecks.org)** (`apps/geometry-deck`) - Explore geometric proofs, angle rules, the Pythagorean theorem, area formulas, 3D solids, and polygon properties with interactive visual models.
+- **[States Deck](https://states.edudecks.org)** (`apps/states-deck`) - Learn all 50 US states, capitals, regions, and state outlines with interactive maps and multiple-choice quizzes.
 - **[Reading Deck](https://reading.edudecks.org)** (`apps/reading-deck`) - Learn the alphabet, letter-sound phonics, animated stroke handwriting guides, and 1,000+ sight words with crystal-clear voice audio.
 - **[Arithmetic Deck](https://arithmetic.edudecks.org)** (`apps/arithmetic-deck`) - Build mental math fluency across operations (+, −, ×, ÷), fractions, and 10-frame visual models with step-by-step strategy hints.
 - **[EduDecks Portal](https://edudecks.org)** (`apps/landing-page`) - Central web portal showcasing the app suite, native screenshot previews, App Store / Google Play links, and privacy center.

@@ -393,8 +393,87 @@ async function generateLandingScreenshots() {
   await page.screenshot({ path: path.join(geometryDir, 'landscape-3-quiz-mode-dark.png') });
   console.log('Saved: geometry/landscape-3-quiz-mode-dark.png');
 
+  // ==========================================
+  // 4. STATES DECK (9006)
+  // ==========================================
+  const statesDir = path.join(root, 'apps/landing-page/public/screenshots/states');
+  fs.mkdirSync(statesDir, { recursive: true });
+
+  console.log('Capturing States Deck screenshots (Light & Dark)...');
+  await page.goto('http://localhost:9006');
+  await page.waitForSelector('main');
+  await page.waitForTimeout(600);
+
+  await page.evaluate(() => {
+    document.documentElement.classList.remove('dark');
+    document.documentElement.classList.add('light');
+    localStorage.setItem('theme', 'light');
+    localStorage.setItem('states-deck-regions', JSON.stringify(['midwest']));
+    localStorage.setItem('states-deck-modes', JSON.stringify(['state-to-capital']));
+    localStorage.setItem('states-deck-show-outline', 'true');
+  });
+  await page.goto('http://localhost:9006');
+  await page.waitForSelector('main');
+  await page.waitForTimeout(500);
+  await clearFocus(page);
+  await page.screenshot({ path: path.join(statesDir, 'landscape-1-card-front.png') });
+  console.log('Saved: states/landscape-1-card-front.png');
+
+  await page.evaluate(() => {
+    document.documentElement.classList.remove('light');
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
+  });
+  await page.waitForTimeout(300);
+  await clearFocus(page);
+  await page.screenshot({ path: path.join(statesDir, 'landscape-1-card-front-dark.png') });
+  console.log('Saved: states/landscape-1-card-front-dark.png');
+
+  const statesCard = page.locator('main > div').first();
+  if (await statesCard.isVisible()) {
+    await statesCard.click();
+    await page.waitForTimeout(600);
+  }
+  await clearFocus(page);
+  await page.screenshot({ path: path.join(statesDir, 'landscape-2-card-back-dark.png') });
+  console.log('Saved: states/landscape-2-card-back-dark.png');
+
+  await page.evaluate(() => {
+    document.documentElement.classList.remove('dark');
+    document.documentElement.classList.add('light');
+    localStorage.setItem('theme', 'light');
+  });
+  await page.waitForTimeout(300);
+  await clearFocus(page);
+  await page.screenshot({ path: path.join(statesDir, 'landscape-2-card-back.png') });
+  console.log('Saved: states/landscape-2-card-back.png');
+
+  const statesTopicBtn = page.locator('#topic-selector-trigger');
+  if (await statesTopicBtn.isVisible()) {
+    await statesTopicBtn.click();
+    await page.waitForTimeout(300);
+    const startQuizBtn = page.locator("button:has-text('Start Quiz')");
+    if (await startQuizBtn.isVisible()) {
+      await startQuizBtn.click();
+      await page.waitForTimeout(600);
+    }
+  }
+  await clearFocus(page);
+  await page.screenshot({ path: path.join(statesDir, 'landscape-3-quiz-mode.png') });
+  console.log('Saved: states/landscape-3-quiz-mode.png');
+
+  await page.evaluate(() => {
+    document.documentElement.classList.remove('light');
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
+  });
+  await page.waitForTimeout(300);
+  await clearFocus(page);
+  await page.screenshot({ path: path.join(statesDir, 'landscape-3-quiz-mode-dark.png') });
+  console.log('Saved: states/landscape-3-quiz-mode-dark.png');
+
   await browser.close();
-  console.log('\n=== All 18 light and dark screenshots successfully generated! ===');
+  console.log('\n=== All 24 light and dark screenshots successfully generated! ===');
 }
 
 generateLandingScreenshots().catch(console.error);
