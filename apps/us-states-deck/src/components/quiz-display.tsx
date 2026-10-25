@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { CheckCircle2, Map, EyeOff } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { DeckQuizManager, useDeckQuizState } from "@decks/core";
 import {
   generateQuizQuestion,
@@ -16,7 +16,6 @@ type QuizDisplayProps = {
   activeRegions: RegionType[];
   activeModes: CardMode[];
   showStateOutline: boolean;
-  onToggleStateOutline: () => void;
   optionCount?: number;
   autoPlayAudio: boolean;
   onSpeak: (text: string, onEnd?: () => void) => void;
@@ -28,7 +27,6 @@ export function QuizDisplay({
   activeRegions,
   activeModes,
   showStateOutline,
-  onToggleStateOutline,
   optionCount = 8,
   autoPlayAudio,
   onSpeak,
@@ -153,35 +151,6 @@ export function QuizDisplay({
           }}
           onClick={() => playPromptAudio(question)}
         >
-          {/* Optional outline toggle button on State & Capital quiz prompts */}
-          {mode !== "map-to-state" && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleStateOutline();
-              }}
-              aria-label={
-                showStateOutline ? "Hide state outline" : "Show state outline"
-              }
-              title={
-                showStateOutline ? "Hide state outline" : "Show state outline"
-              }
-              className={cn(
-                "absolute top-3 left-3 sm:top-4 sm:left-4 h-10 w-10 rounded-full inline-flex items-center justify-center text-white transition-all active:scale-95",
-                showStateOutline
-                  ? "bg-white/25 opacity-100 shadow-md"
-                  : "opacity-75 hover:opacity-100 hover:bg-white/15"
-              )}
-            >
-              {showStateOutline ? (
-                <Map className="w-5 h-5" />
-              ) : (
-                <EyeOff className="w-5 h-5" />
-              )}
-            </button>
-          )}
-
           <span className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-white/80">
             {promptSubtitle}
           </span>

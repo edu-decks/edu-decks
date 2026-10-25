@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import { FlashCardShell, CardCornerButton } from "@decks/core";
-import { Map, EyeOff } from "lucide-react";
+import { FlashCardShell } from "@decks/core";
 import { StateOutlineSvg, UsLocatorMapSvg } from "./state-map-svg";
 import { REGION_LABELS } from "@/lib/colors";
 import type { StatesCard as StatesCardType } from "@/lib/types";
@@ -12,7 +11,6 @@ type StatesCardProps = {
   isFlipped: boolean;
   slideDirection: "next" | "prev";
   showStateOutline: boolean;
-  onToggleStateOutline: () => void;
   onSpeak: (text: string) => void;
   onCardTap?: () => void;
   className?: string;
@@ -24,7 +22,6 @@ export function StatesCard({
   isFlipped,
   slideDirection,
   showStateOutline,
-  onToggleStateOutline,
   onSpeak,
   onCardTap,
   className,
@@ -37,27 +34,6 @@ export function StatesCard({
     e.stopPropagation();
     onSpeak(isFlipped ? card.backSpeechText : card.frontSpeechText);
   };
-
-  // Top-left button to quickly toggle state outline visibility on State & Capital cards
-  const outlineToggleButton =
-    mode !== "map-to-state" ? (
-      <CardCornerButton
-        position="top-left"
-        size="lg"
-        isActive={showStateOutline}
-        onClick={() => onToggleStateOutline()}
-        ariaLabel={
-          showStateOutline ? "Hide state outline" : "Show state outline"
-        }
-        title={showStateOutline ? "Hide state outline" : "Show state outline"}
-      >
-        {showStateOutline ? (
-          <Map className="w-5 h-5 sm:w-6 sm:h-6" />
-        ) : (
-          <EyeOff className="w-5 h-5 sm:w-6 sm:h-6 opacity-75" />
-        )}
-      </CardCornerButton>
-    ) : undefined;
 
   // ── Primary (Front) Content ───────────────────────────────────────────────
   // Constant height across unrevealed and revealed states so CardRevealLayout
@@ -191,7 +167,6 @@ export function StatesCard({
       key={card.id}
       front={primaryContent}
       reveal={detailContent}
-      topLeft={outlineToggleButton}
       isFlipped={isFlipped}
       slideDirection={slideDirection}
       backgroundColor={card.color}

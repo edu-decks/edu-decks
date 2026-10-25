@@ -154,9 +154,6 @@ export default function StatesDeckPage() {
             activeRegions={settings.activeRegions}
             activeModes={settings.activeModes}
             showStateOutline={settings.showStateOutline}
-            onToggleStateOutline={() =>
-              settings.setShowStateOutline(!settings.showStateOutline)
-            }
             optionCount={settings.quizOptionCount}
             autoPlayAudio={settings.autoPlayAudio}
             onSpeak={(text, onEnd) => speak(text, true, onEnd)}
@@ -173,9 +170,6 @@ export default function StatesDeckPage() {
           isFlipped={isFlipped}
           slideDirection={slideDirection}
           showStateOutline={settings.showStateOutline}
-          onToggleStateOutline={() =>
-            settings.setShowStateOutline(!settings.showStateOutline)
-          }
           onSpeak={(text) => speak(text, true)}
         />
       )}
