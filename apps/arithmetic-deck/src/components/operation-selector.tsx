@@ -57,6 +57,16 @@ export function OperationSelector({
 
   const isMatchedPreset = rangePresets.some((p) => p.min === minRange && p.max === maxRange);
   const [showCustom, setShowCustom] = useState(!isMatchedPreset);
+  const [minInput, setMinInput] = useState(() => String(minRange));
+  const [maxInput, setMaxInput] = useState(() => String(maxRange));
+
+  useEffect(() => {
+    setMinInput(String(minRange));
+  }, [minRange]);
+
+  useEffect(() => {
+    setMaxInput(String(maxRange));
+  }, [maxRange]);
 
   useEffect(() => {
     if (!isMatchedPreset) {
@@ -64,8 +74,31 @@ export function OperationSelector({
     }
   }, [minRange, maxRange, isMatchedPreset]);
 
+  const parsedMinInput = parseInt(minInput, 10);
+  const parsedMaxInput = parseInt(maxInput, 10);
+  const effectiveMin = Number.isNaN(parsedMinInput) ? minRange : Math.max(0, parsedMinInput);
+  const effectiveMax = Number.isNaN(parsedMaxInput) ? maxRange : Math.max(1, parsedMaxInput);
+  const isRangeInvalid = effectiveMin >= effectiveMax;
+
+  const clampAndCommitRange = () => {
+    const safeMax = Math.max(1, effectiveMax);
+    const safeMin = Math.max(0, Math.min(effectiveMin, safeMax - 1));
+    setMinInput(String(safeMin));
+    setMaxInput(String(safeMax));
+    if (safeMin !== minRange || safeMax !== maxRange) {
+      onRangeChange(safeMin, safeMax);
+    }
+  };
+
+  const handlePopoverOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      clampAndCommitRange();
+    }
+    onOpenChange(nextOpen);
+  };
+
   return (
-    <Popover open={open} onOpenChange={onOpenChange}>
+    <Popover open={open} onOpenChange={handlePopoverOpenChange}>
       <PopoverTrigger asChild>
         <Button
           size="icon"
@@ -88,7 +121,7 @@ export function OperationSelector({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onOpenChange?.(false)}
+            onClick={() => handlePopoverOpenChange(false)}
             aria-label="Close menu"
           >
             <X className="h-6 w-6" />
@@ -260,25 +293,44 @@ export function OperationSelector({
                         variant="outline"
                         size="icon"
                         className="h-8 w-8 rounded-lg shrink-0 font-bold text-base"
-                        onClick={() => onRangeChange(Math.max(0, minRange - 1), maxRange)}
+                        onClick={() => {
+                          const nextMin = Math.max(0, effectiveMin - 1);
+                          setMinInput(String(nextMin));
+                          onRangeChange(nextMin, effectiveMax);
+                        }}
                       >
                         -
                       </Button>
                       <input
                         type="number"
-                        value={minRange}
+                        aria-label="Min Number"
+                        aria-invalid={isRangeInvalid}
+                        value={minInput}
                         onChange={(e) => {
-                          const val = parseInt(e.target.value, 10) || 0;
-                          onRangeChange(Math.max(0, Math.min(val, maxRange - 1)), maxRange);
+                          const raw = e.target.value;
+                          setMinInput(raw);
+                          const val = parseInt(raw, 10);
+                          if (!Number.isNaN(val)) {
+                            onRangeChange(Math.max(0, val), effectiveMax);
+                          }
                         }}
-                        className="w-full h-8 text-center font-headline font-bold text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        className={cn(
+                          "w-full h-8 text-center font-headline font-bold text-sm bg-background border rounded-lg focus:outline-none focus:ring-2",
+                          isRangeInvalid
+                            ? "border-red-600 dark:border-red-400 text-red-700 dark:text-red-400 focus:ring-red-600 dark:focus:ring-red-400"
+                            : "focus:ring-primary"
+                        )}
                       />
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
                         className="h-8 w-8 rounded-lg shrink-0 font-bold text-base"
-                        onClick={() => onRangeChange(Math.min(minRange + 1, maxRange - 1), maxRange)}
+                        onClick={() => {
+                          const nextMin = effectiveMin + 1;
+                          setMinInput(String(nextMin));
+                          onRangeChange(nextMin, effectiveMax);
+                        }}
                       >
                         +
                       </Button>
@@ -296,30 +348,58 @@ export function OperationSelector({
                         variant="outline"
                         size="icon"
                         className="h-8 w-8 rounded-lg shrink-0 font-bold text-base"
-                        onClick={() => onRangeChange(minRange, Math.max(minRange + 1, maxRange - 1))}
+                        onClick={() => {
+                          const nextMax = Math.max(1, effectiveMax - 1);
+                          setMaxInput(String(nextMax));
+                          onRangeChange(effectiveMin, nextMax);
+                        }}
                       >
                         -
                       </Button>
                       <input
                         type="number"
-                        value={maxRange}
+                        aria-label="Max Number"
+                        aria-invalid={isRangeInvalid}
+                        value={maxInput}
                         onChange={(e) => {
-                          const val = parseInt(e.target.value, 10) || minRange + 1;
-                          onRangeChange(minRange, Math.max(minRange + 1, val));
+                          const raw = e.target.value;
+                          setMaxInput(raw);
+                          const val = parseInt(raw, 10);
+                          if (!Number.isNaN(val)) {
+                            onRangeChange(effectiveMin, Math.max(1, val));
+                          }
                         }}
-                        className="w-full h-8 text-center font-headline font-bold text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        className={cn(
+                          "w-full h-8 text-center font-headline font-bold text-sm bg-background border rounded-lg focus:outline-none focus:ring-2",
+                          isRangeInvalid
+                            ? "border-red-600 dark:border-red-400 text-red-700 dark:text-red-400 focus:ring-red-600 dark:focus:ring-red-400"
+                            : "focus:ring-primary"
+                        )}
                       />
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
                         className="h-8 w-8 rounded-lg shrink-0 font-bold text-base"
-                        onClick={() => onRangeChange(minRange, maxRange + 1)}
+                        onClick={() => {
+                          const nextMax = effectiveMax + 1;
+                          setMaxInput(String(nextMax));
+                          onRangeChange(effectiveMin, nextMax);
+                        }}
                       >
                         +
                       </Button>
                     </div>
                   </div>
+
+                  {isRangeInvalid && (
+                    <p
+                      role="alert"
+                      className="col-span-2 text-xs font-semibold text-red-700 dark:text-red-400 text-center"
+                    >
+                      Min number must be less than Max number.
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -409,7 +489,7 @@ export function OperationSelector({
               variant="default"
               className="w-full h-14 rounded-2xl text-lg font-bold font-headline bg-amber-600 hover:bg-amber-500 text-white shadow-md active:scale-95 transition-transform"
               onClick={() => {
-                onOpenChange?.(false);
+                handlePopoverOpenChange(false);
                 onStartQuiz?.();
               }}
             >

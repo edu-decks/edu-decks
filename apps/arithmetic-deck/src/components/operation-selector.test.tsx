@@ -160,4 +160,54 @@ describe("arithmetic-deck: OperationSelector", () => {
     fireEvent.click(upTo4Btn);
     expect(onFractionMaxDenominatorChange).toHaveBeenCalledWith(4);
   });
+
+  it("shows an error when Min Number >= Max Number and clamps on close", () => {
+    const onRangeChange = vi.fn();
+    const onOpenChange = vi.fn();
+
+    render(
+      <OperationSelector
+        open={true}
+        onOpenChange={onOpenChange}
+        activeOperations={["+", "-"]}
+        onOperationToggle={vi.fn()}
+        minRange={1}
+        maxRange={10}
+        onRangeChange={onRangeChange}
+        showWholeNumbers={true}
+        onShowWholeNumbersChange={vi.fn()}
+        showFractions={false}
+        onShowFractionsChange={vi.fn()}
+        onStartQuiz={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Custom" }));
+
+    const minInput = screen.getByLabelText("Min Number") as HTMLInputElement;
+    const maxInput = screen.getByLabelText("Max Number") as HTMLInputElement;
+
+    // Typing 100 into Min while Max is 10 should not clamp immediately and should show error
+    fireEvent.change(minInput, { target: { value: "100" } });
+    expect(minInput.value).toBe("100");
+    expect(onRangeChange).toHaveBeenLastCalledWith(100, 10);
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Min number must be less than Max number."
+    );
+
+    // Typing 999 into Max clears the error
+    fireEvent.change(maxInput, { target: { value: "999" } });
+    expect(maxInput.value).toBe("999");
+    expect(onRangeChange).toHaveBeenLastCalledWith(100, 999);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+
+    // If Max is lowered below Min (e.g. 50) and menu closes, it clamps Min to Max - 1 (49)
+    fireEvent.change(maxInput, { target: { value: "50" } });
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+
+    const closeBtn = screen.getByRole("button", { name: "Close menu" });
+    fireEvent.click(closeBtn);
+    expect(onRangeChange).toHaveBeenLastCalledWith(49, 50);
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
 });
