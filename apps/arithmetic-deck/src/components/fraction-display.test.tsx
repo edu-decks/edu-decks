@@ -16,4 +16,12 @@ describe("arithmetic-deck: FractionDisplay", () => {
     expect(screen.getByText("7")).toBeInTheDocument();
     expect(screen.queryByText("1")).not.toBeInTheDocument();
   });
+
+  it("renders improper fraction as mixed number when showMixed is true", () => {
+    render(<FractionDisplay fraction={{ n: 7, d: 4 }} showMixed={true} />);
+
+    expect(screen.getByText("1")).toBeInTheDocument();
+    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getByText("4")).toBeInTheDocument();
+  });
 });

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { MathProblem } from "@/lib/types";
-import { lcm } from "./visual-utils";
+import { lcm, canShowVisualDiagram } from "./visual-utils";
 import { FractionVisualizer } from "./FractionVisualizer";
 import { WholeNumberVisualizer } from "./WholeNumberVisualizer";
 
@@ -183,7 +183,7 @@ export function VisualMath({ problem, isFlipped = true }: VisualMathProps) {
     setWhiteCount(0);
     setActiveStep(1);
 
-    if (!isFlipped) {
+    if (!isFlipped || !canShowVisualDiagram(problem)) {
       return () => {
         clearStepTimers();
       };
@@ -376,6 +376,10 @@ export function VisualMath({ problem, isFlipped = true }: VisualMathProps) {
       clearStepTimers();
     };
   }, [problem.id, isFlipped, replayKey, num1, num2, operation, problem.isFraction]);
+
+  if (!canShowVisualDiagram(problem)) {
+    return null;
+  }
 
   if (problem.isFraction) {
     return (

@@ -3,6 +3,7 @@
 import React from "react";
 import { MathProblem, OPERATION_COLORS } from "@/lib/types";
 import { VisualMath } from "./visual-math";
+import { canShowVisualDiagram } from "./visual-math/visual-utils";
 import { FractionDisplay } from "./fraction-display";
 import { MathSymbol } from "./math-symbol";
 import { FlashCardShell, FrostedBadge, CardCornerButton } from "@decks/core";
@@ -29,7 +30,21 @@ export function MathCard({
   onSpeak,
 }: MathCardProps) {
   const opInfo = OPERATION_COLORS[problem.operation];
-  const isDiagramVisible = isFlipped || showHint;
+  const hasDiagram = canShowVisualDiagram(problem);
+  const hasConversionBadge = Boolean(
+    problem.hasConversion && problem.convertedFrac1 && problem.convertedFrac2
+  );
+  const hasMixedEquivalence = Boolean(
+    problem.isFraction &&
+      problem.fracAnswer &&
+      problem.fracAnswer.d > 1 &&
+      Math.abs(problem.fracAnswer.n) > problem.fracAnswer.d &&
+      problem.fracAnswer.n % problem.fracAnswer.d !== 0
+  );
+  const isDiagramVisible = isFlipped || (showHint && hasDiagram);
+  const hasRevealContent =
+    (isFlipped && (hasDiagram || hasConversionBadge || hasMixedEquivalence)) ||
+    (showHint && hasDiagram);
 
   const handleSpeak = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -43,7 +58,7 @@ export function MathCard({
   return (
     <FlashCardShell
       key={problem.id}
-      isFlipped={isFlipped}
+      isFlipped={hasRevealContent}
       slideDirection={slideDirection}
       backgroundColor={opInfo.hex}
       className={cn("border-none")}
@@ -51,7 +66,7 @@ export function MathCard({
       onSpeak={handleSpeak}
       speakerAriaLabel="Listen to equation"
       topLeft={
-        !isFlipped && onToggleHint ? (
+        !isFlipped && onToggleHint && hasDiagram ? (
           <CardCornerButton
             position="top-left"
             onClick={onToggleHint}
@@ -67,10 +82,14 @@ export function MathCard({
         <div
           className={cn(
             "relative flex items-center justify-center whitespace-nowrap text-center transition-all duration-500 ease-in-out origin-center p-1 sm:p-2",
-            isDiagramVisible
+            hasRevealContent
               ? problem.isFraction
-                ? "scale-[0.80] sm:scale-[0.78] [@media(max-height:640px)]:scale-[0.72]"
+                ? problem.showAsMixed
+                  ? "scale-[0.74] sm:scale-[0.74] [@media(max-height:640px)]:scale-[0.68]"
+                  : "scale-[0.80] sm:scale-[0.78] [@media(max-height:640px)]:scale-[0.72]"
                 : "scale-[0.88] sm:scale-[0.85] [@media(max-height:640px)]:scale-[0.78]"
+              : problem.showAsMixed
+              ? "scale-[0.90] sm:scale-95"
               : "scale-100"
           )}
         >
@@ -78,6 +97,7 @@ export function MathCard({
           {problem.isFraction && problem.frac1 ? (
             <FractionDisplay
               fraction={problem.frac1}
+              showMixed={problem.showAsMixed}
               colorClass={cn(
                 "transition-colors duration-500",
                 isFlipped ? "text-cyan-300" : "text-white"
@@ -108,6 +128,7 @@ export function MathCard({
           {problem.isFraction && problem.frac2 ? (
             <FractionDisplay
               fraction={problem.frac2}
+              showMixed={problem.showAsMixed}
               colorClass={cn(
                 "transition-colors duration-500",
                 isFlipped ? "text-amber-300" : "text-white"
@@ -145,6 +166,7 @@ export function MathCard({
               >
                 <FractionDisplay
                   fraction={problem.fracAnswer}
+                  showMixed={problem.showAsMixed}
                   colorClass="text-white"
                   size="lg"
                 />
@@ -168,26 +190,44 @@ export function MathCard({
         </div>
       }
       revealContent={
-        <div className="flex flex-col items-center justify-center p-1 sm:p-2 gap-1.5">
-          {/* Conversion LCD Pill Badge shown in reveal content */}
-          {problem.hasConversion && problem.convertedFrac1 && problem.convertedFrac2 && (
-            <div className="px-3 py-0.5 sm:py-1 rounded-full bg-black/25 border border-white/20 backdrop-blur-xs flex items-center justify-center gap-1.5 text-white/90 font-headline font-bold shadow-sm pointer-events-none shrink-0 animate-fade-in-zoom">
-              <FractionDisplay fraction={problem.convertedFrac1} colorClass="text-cyan-300" size="pill" />
-              <MathSymbol symbol={problem.operation} isFraction={true} className="text-lg sm:text-xl font-normal mx-0.5" />
-              <FractionDisplay fraction={problem.convertedFrac2} colorClass="text-amber-300" size="pill" />
-              <MathSymbol symbol="=" isFraction={true} className="text-lg sm:text-xl font-normal mx-0.5" />
-              <FractionDisplay
-                fraction={{
-                  n: problem.convertedFrac1.n + (problem.operation === '+' ? problem.convertedFrac2.n : -problem.convertedFrac2.n),
-                  d: problem.convertedFrac1.d,
-                }}
-                colorClass="text-white"
-                size="pill"
-              />
-            </div>
-          )}
-          <VisualMath problem={problem} isFlipped={isDiagramVisible} />
-        </div>
+        hasRevealContent ? (
+          <div className="flex flex-col items-center justify-center p-1 sm:p-2 gap-1.5">
+            {isFlipped && (hasConversionBadge || hasMixedEquivalence) && (
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                {/* Conversion LCD Pill Badge shown in reveal content */}
+                {hasConversionBadge && problem.convertedFrac1 && problem.convertedFrac2 && (
+                  <div className="px-3 py-0.5 sm:py-1 rounded-full bg-black/25 border border-white/20 backdrop-blur-xs flex items-center justify-center gap-1.5 text-white/90 font-headline font-bold shadow-sm pointer-events-none shrink-0 animate-fade-in-zoom">
+                    <FractionDisplay fraction={problem.convertedFrac1} colorClass="text-cyan-300" size="pill" />
+                    <MathSymbol symbol={problem.operation} isFraction={true} className="text-lg sm:text-xl font-normal mx-0.5" />
+                    <FractionDisplay fraction={problem.convertedFrac2} colorClass="text-amber-300" size="pill" />
+                    <MathSymbol symbol="=" isFraction={true} className="text-lg sm:text-xl font-normal mx-0.5" />
+                    <FractionDisplay
+                      fraction={{
+                        n: problem.convertedFrac1.n + (problem.operation === '+' ? problem.convertedFrac2.n : -problem.convertedFrac2.n),
+                        d: problem.convertedFrac1.d,
+                      }}
+                      colorClass="text-white"
+                      size="pill"
+                    />
+                  </div>
+                )}
+
+                {/* Improper <-> Mixed Equivalence Pill Badge */}
+                {hasMixedEquivalence && problem.fracAnswer && (
+                  <div
+                    data-testid="mixed-equivalence-badge"
+                    className="px-3 py-0.5 sm:py-1 rounded-full bg-black/25 border border-white/20 backdrop-blur-xs flex items-center justify-center gap-1.5 text-white/90 font-headline font-bold shadow-sm pointer-events-none shrink-0 animate-fade-in-zoom"
+                  >
+                    <FractionDisplay fraction={problem.fracAnswer} showMixed={false} colorClass="text-white" size="pill" />
+                    <MathSymbol symbol="=" isFraction={true} className="text-lg sm:text-xl font-normal mx-0.5" />
+                    <FractionDisplay fraction={problem.fracAnswer} showMixed={true} colorClass="text-white" size="pill" />
+                  </div>
+                )}
+              </div>
+            )}
+            {hasDiagram && <VisualMath problem={problem} isFlipped={isDiagramVisible} />}
+          </div>
+        ) : undefined
       }
     />
   );

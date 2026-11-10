@@ -1,9 +1,34 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { MathOperation, MathProblem, Fraction, FractionDenominatorMode, FractionMaxDenominator } from "@/lib/types";
+import {
+  MathOperation,
+  MathProblem,
+  Fraction,
+  FractionDenominatorMode,
+  FractionMaxDenominator,
+  FractionValueType,
+} from "@/lib/types";
 import { generateMathProblem } from "@/lib/math-generator";
 
 export function parseFractionValue(str: string): number | null {
-  const parts = str.trim().split('/');
+  const trimmed = str.trim();
+  if (!trimmed) return null;
+
+  // Check for mixed number format: "W N/D"
+  const spaceParts = trimmed.split(/\s+/);
+  if (spaceParts.length === 2) {
+    const w = parseFloat(spaceParts[0]);
+    const fracParts = spaceParts[1].split("/");
+    if (fracParts.length === 2 && fracParts[0] && fracParts[1]) {
+      const n = parseFloat(fracParts[0]);
+      const d = parseFloat(fracParts[1]);
+      if (!isNaN(w) && !isNaN(n) && !isNaN(d) && d !== 0 && n >= 0) {
+        return w < 0 ? w - n / d : w + n / d;
+      }
+    }
+    return null;
+  }
+
+  const parts = trimmed.split("/");
   if (parts.length === 1) {
     const val = parseFloat(parts[0]);
     return isNaN(val) ? null : val;
@@ -19,7 +44,23 @@ export function parseFractionValue(str: string): number | null {
 }
 
 export function stringToFraction(str: string): Fraction | null {
-  const parts = str.trim().split('/');
+  const trimmed = str.trim();
+  const spaceParts = trimmed.split(/\s+/);
+  if (spaceParts.length === 2) {
+    const w = parseInt(spaceParts[0], 10);
+    const fracParts = spaceParts[1].split("/");
+    if (fracParts.length === 2) {
+      const n = parseInt(fracParts[0], 10);
+      const d = parseInt(fracParts[1], 10);
+      if (!isNaN(w) && !isNaN(n) && !isNaN(d) && d > 0 && n >= 0) {
+        const sign = w < 0 ? -1 : 1;
+        return { n: sign * (Math.abs(w) * d + n), d };
+      }
+    }
+    return null;
+  }
+
+  const parts = trimmed.split("/");
   if (parts.length === 2) {
     const n = parseInt(parts[0], 10);
     const d = parseInt(parts[1], 10);
@@ -30,6 +71,33 @@ export function stringToFraction(str: string): Fraction | null {
   return null;
 }
 
+function buildCombinedFractionInput(
+  whole: string,
+  num: string,
+  den: string,
+  slot: "whole" | "numerator" | "denominator"
+): string {
+  if (whole && num && den) {
+    return `${whole} ${num}/${den}`;
+  }
+  if (!whole && num && den) {
+    return `${num}/${den}`;
+  }
+  if (whole && num && !den) {
+    return `${whole}/${num}`;
+  }
+  if (whole && !num && !den) {
+    return slot === "numerator" ? `${whole}/` : whole;
+  }
+  if (!whole && num && !den) {
+    return slot === "denominator" ? `${num}/` : num;
+  }
+  if (!whole && !num && den) {
+    return `0/${den}`;
+  }
+  return "";
+}
+
 type UseQuizSessionOptions = {
   activeOperations: MathOperation[];
   minRange: number;
@@ -38,6 +106,7 @@ type UseQuizSessionOptions = {
   showFractions?: boolean;
   fractionDenominatorMode?: FractionDenominatorMode;
   fractionMaxDenominator?: FractionMaxDenominator;
+  fractionValueType?: FractionValueType;
   autoPlayAudio: boolean;
   onSpeak: (text: string, onEnd?: () => void) => void;
   onPlayChime: (correct: boolean) => void;
@@ -52,24 +121,27 @@ export function useQuizSession({
   showFractions = false,
   fractionDenominatorMode = 'all',
   fractionMaxDenominator = 8,
+  fractionValueType = 'proper',
   autoPlayAudio,
   onSpeak,
   onPlayChime,
 }: UseQuizSessionOptions) {
   const [currentProblem, setCurrentProblem] = useState<MathProblem | null>(null);
+  const [wholeInput, setWholeInput] = useState<string>("");
   const [numInput, setNumInput] = useState<string>("");
   const [denInput, setDenInput] = useState<string>("");
-  const [activeFractionSlot, setActiveFractionSlot] = useState<"numerator" | "denominator">("numerator");
+  const [activeFractionSlot, setActiveFractionSlot] = useState<"whole" | "numerator" | "denominator">("numerator");
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [isPlayingSound, setIsPlayingSound] = useState(false);
 
   const fractionStateRef = useRef<{
+    whole: string;
     num: string;
     den: string;
-    slot: "numerator" | "denominator";
-  }>({ num: "", den: "", slot: "numerator" });
+    slot: "whole" | "numerator" | "denominator";
+  }>({ whole: "", num: "", den: "", slot: "numerator" });
 
   const playTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const submitTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -97,6 +169,16 @@ export function useQuizSession({
     [onSpeak]
   );
 
+  const getInitialSlot = useCallback(
+    (problem: MathProblem | null): "whole" | "numerator" | "denominator" => {
+      if (problem?.isFraction && (problem.showAsMixed || fractionValueType === "mixed")) {
+        return "whole";
+      }
+      return "numerator";
+    },
+    [fractionValueType]
+  );
+
   const nextQuestion = useCallback(() => {
     if (playTimeoutRef.current) clearTimeout(playTimeoutRef.current);
 
@@ -107,13 +189,16 @@ export function useQuizSession({
       showWholeNumbers,
       showFractions,
       fractionDenominatorMode,
-      fractionMaxDenominator
+      fractionMaxDenominator,
+      fractionValueType
     );
+    const initialSlot = getInitialSlot(problem);
     setCurrentProblem(problem);
-    fractionStateRef.current = { num: "", den: "", slot: "numerator" };
+    fractionStateRef.current = { whole: "", num: "", den: "", slot: initialSlot };
+    setWholeInput("");
     setNumInput("");
     setDenInput("");
-    setActiveFractionSlot("numerator");
+    setActiveFractionSlot(initialSlot);
     setIsCorrect(null);
 
     if (autoPlayAudio) {
@@ -121,7 +206,19 @@ export function useQuizSession({
         playAudioPrompt(problem);
       }, 400);
     }
-  }, [activeOperations, minRange, maxRange, showWholeNumbers, showFractions, fractionDenominatorMode, fractionMaxDenominator, autoPlayAudio, playAudioPrompt]);
+  }, [
+    activeOperations,
+    minRange,
+    maxRange,
+    showWholeNumbers,
+    showFractions,
+    fractionDenominatorMode,
+    fractionMaxDenominator,
+    fractionValueType,
+    autoPlayAudio,
+    playAudioPrompt,
+    getInitialSlot,
+  ]);
 
   useEffect(() => {
     nextQuestion();
@@ -133,11 +230,7 @@ export function useQuizSession({
   }, []);
 
   const inputVal = currentProblem?.isFraction
-    ? denInput
-      ? `${numInput}/${denInput}`
-      : activeFractionSlot === "denominator"
-      ? `${numInput}/`
-      : numInput
+    ? buildCombinedFractionInput(wholeInput, numInput, denInput, activeFractionSlot)
     : numInput;
 
   const handleSubmitInput = useCallback(
@@ -167,15 +260,17 @@ export function useQuizSession({
         onPlayChime(false);
 
         submitTimeoutRef.current = setTimeout(() => {
-          fractionStateRef.current = { num: "", den: "", slot: "numerator" };
+          const resetSlot = getInitialSlot(currentProblem);
+          fractionStateRef.current = { whole: "", num: "", den: "", slot: resetSlot };
+          setWholeInput("");
           setNumInput("");
           setDenInput("");
-          setActiveFractionSlot("numerator");
+          setActiveFractionSlot(resetSlot);
           setIsCorrect(null);
         }, 700);
       }
     },
-    [currentProblem, isCorrect, nextQuestion, onPlayChime]
+    [currentProblem, isCorrect, nextQuestion, onPlayChime, getInitialSlot]
   );
 
   const handleKeyPress = useCallback(
@@ -183,10 +278,15 @@ export function useQuizSession({
       if (isCorrect !== null || !currentProblem) return;
 
       if (digit === "-") {
-        if (fractionStateRef.current.slot === "numerator" || !currentProblem.isFraction) {
+        if (!currentProblem.isFraction || fractionStateRef.current.slot === "numerator") {
           if (fractionStateRef.current.num === "") {
             fractionStateRef.current.num = "-";
             setNumInput("-");
+          }
+        } else if (fractionStateRef.current.slot === "whole") {
+          if (fractionStateRef.current.whole === "") {
+            fractionStateRef.current.whole = "-";
+            setWholeInput("-");
           }
         }
         return;
@@ -194,51 +294,53 @@ export function useQuizSession({
 
       if (digit === "/") {
         if (showFractions || currentProblem.isFraction) {
-          fractionStateRef.current.slot = "denominator";
-          setActiveFractionSlot("denominator");
+          if (fractionStateRef.current.slot === "whole") {
+            fractionStateRef.current.slot = "numerator";
+            setActiveFractionSlot("numerator");
+          } else {
+            fractionStateRef.current.slot = "denominator";
+            setActiveFractionSlot("denominator");
+          }
         }
         return;
       }
 
       if (currentProblem.isFraction) {
-        if (fractionStateRef.current.slot === "numerator") {
+        if (fractionStateRef.current.slot === "whole") {
+          if (fractionStateRef.current.whole.length < 4) {
+            fractionStateRef.current.whole += digit;
+            setWholeInput(fractionStateRef.current.whole);
+          }
+        } else if (fractionStateRef.current.slot === "numerator") {
           if (fractionStateRef.current.num.length < 6) {
             fractionStateRef.current.num += digit;
             setNumInput(fractionStateRef.current.num);
-          }
-
-          const curNum = fractionStateRef.current.num;
-          const curDen = fractionStateRef.current.den;
-          const combined = curDen ? `${curNum}/${curDen}` : curNum;
-          const parsedVal = parseFractionValue(combined);
-          const isExactMatch = combined.trim() === currentProblem.answerText.trim();
-          const isNumericMatch =
-            parsedVal !== null &&
-            Math.abs(parsedVal - currentProblem.answer) < 0.0001 &&
-            (combined.includes("/") || currentProblem.answerText === combined);
-
-          if (isExactMatch || isNumericMatch) {
-            handleSubmitInput(combined);
           }
         } else {
           if (fractionStateRef.current.den.length < 6) {
             fractionStateRef.current.den += digit;
             setDenInput(fractionStateRef.current.den);
           }
+        }
 
-          const curNum = fractionStateRef.current.num;
-          const curDen = fractionStateRef.current.den;
-          const combined = `${curNum || "0"}/${curDen}`;
-          const parsedVal = parseFractionValue(combined);
-          const isExactMatch = combined.trim() === currentProblem.answerText.trim();
-          const isNumericMatch =
-            parsedVal !== null &&
-            Math.abs(parsedVal - currentProblem.answer) < 0.0001 &&
-            (combined.includes("/") || currentProblem.answerText === combined);
+        const curWhole = fractionStateRef.current.whole;
+        const curNum = fractionStateRef.current.num;
+        const curDen = fractionStateRef.current.den;
+        const combined = buildCombinedFractionInput(
+          curWhole,
+          curNum,
+          curDen,
+          fractionStateRef.current.slot
+        );
+        const parsedVal = parseFractionValue(combined);
+        const isExactMatch = combined.trim() === currentProblem.answerText.trim();
+        const isNumericMatch =
+          parsedVal !== null &&
+          Math.abs(parsedVal - currentProblem.answer) < 0.0001 &&
+          (combined.includes("/") || currentProblem.answerText === combined);
 
-          if (isExactMatch || isNumericMatch) {
-            handleSubmitInput(combined);
-          }
+        if (isExactMatch || isNumericMatch) {
+          handleSubmitInput(combined);
         }
       } else {
         if (fractionStateRef.current.num.length < 10) {
@@ -263,6 +365,7 @@ export function useQuizSession({
   const handleDelete = useCallback(() => {
     if (isCorrect !== null) return;
     if (currentProblem?.isFraction) {
+      const hasWholeSlot = Boolean(currentProblem.showAsMixed || fractionValueType === "mixed");
       if (fractionStateRef.current.slot === "denominator") {
         if (fractionStateRef.current.den.length > 0) {
           fractionStateRef.current.den = fractionStateRef.current.den.slice(0, -1);
@@ -271,15 +374,29 @@ export function useQuizSession({
           fractionStateRef.current.slot = "numerator";
           setActiveFractionSlot("numerator");
         }
+      } else if (fractionStateRef.current.slot === "numerator") {
+        if (fractionStateRef.current.num.length > 0) {
+          fractionStateRef.current.num = fractionStateRef.current.num.slice(0, -1);
+          setNumInput(fractionStateRef.current.num);
+        } else if (hasWholeSlot) {
+          fractionStateRef.current.slot = "whole";
+          setActiveFractionSlot("whole");
+        }
       } else {
-        fractionStateRef.current.num = fractionStateRef.current.num.slice(0, -1);
-        setNumInput(fractionStateRef.current.num);
+        fractionStateRef.current.whole = fractionStateRef.current.whole.slice(0, -1);
+        setWholeInput(fractionStateRef.current.whole);
       }
     } else {
       fractionStateRef.current.num = fractionStateRef.current.num.slice(0, -1);
       setNumInput(fractionStateRef.current.num);
     }
-  }, [isCorrect, currentProblem?.isFraction]);
+  }, [isCorrect, currentProblem, fractionValueType]);
+
+  const onSelectWhole = useCallback(() => {
+    if (isCorrect !== null) return;
+    fractionStateRef.current.slot = "whole";
+    setActiveFractionSlot("whole");
+  }, [isCorrect]);
 
   const onSelectNumerator = useCallback(() => {
     if (isCorrect !== null) return;
@@ -316,6 +433,7 @@ export function useQuizSession({
   return {
     currentProblem,
     inputVal,
+    wholePart: wholeInput,
     numPart: numInput,
     denPart: denInput,
     activeFractionSlot,
@@ -327,6 +445,7 @@ export function useQuizSession({
     handleKeyPress,
     handleDelete,
     handleSubmitInput,
+    onSelectWhole,
     onSelectNumerator,
     onSelectDenominator,
   };

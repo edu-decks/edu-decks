@@ -28,12 +28,15 @@ export type MathProblem = {
   convertedFrac1?: Fraction;
   convertedFrac2?: Fraction;
   hasConversion?: boolean;
+  fractionValueType?: 'proper' | 'improper' | 'mixed';
+  showAsMixed?: boolean;
 };
 
 export type NumberType = 'whole' | 'fractions';
 
 export type FractionDenominatorMode = 'same' | 'different' | 'all';
 export type FractionMaxDenominator = 4 | 8 | 12;
+export type FractionValueType = 'proper' | 'improper' | 'mixed' | 'all';
 
 export type AppSettingsState = {
   activeOperations: MathOperation[];
@@ -45,6 +48,7 @@ export type AppSettingsState = {
   showFractions: boolean;
   fractionDenominatorMode: FractionDenominatorMode;
   fractionMaxDenominator: FractionMaxDenominator;
+  fractionValueType: FractionValueType;
   autoPlayAudio: boolean;
   showCardCount: boolean;
   showTimer: boolean;

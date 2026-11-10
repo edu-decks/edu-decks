@@ -19,12 +19,14 @@ describe("arithmetic-deck: useQuizSession", () => {
       expect(parseFractionValue("5")).toBe(5);
       expect(parseFractionValue("1/2")).toBe(0.5);
       expect(parseFractionValue("3/4")).toBe(0.75);
+      expect(parseFractionValue("1 3/4")).toBe(1.75);
       expect(parseFractionValue("invalid")).toBeNull();
       expect(parseFractionValue("5/0")).toBeNull();
     });
 
     it("parses fraction string into Fraction object", () => {
       expect(stringToFraction("3/4")).toEqual({ n: 3, d: 4 });
+      expect(stringToFraction("1 3/4")).toEqual({ n: 7, d: 4 });
       expect(stringToFraction("5")).toBeNull();
       expect(stringToFraction("invalid/4")).toBeNull();
     });

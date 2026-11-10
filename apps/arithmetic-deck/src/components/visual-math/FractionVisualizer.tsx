@@ -1,6 +1,7 @@
 import { MathProblem } from "@/lib/types";
+import { formatFractionText } from "@/lib/math-generator";
 import { cn } from "@/lib/utils";
-import { lcm, getRoundedRectPath } from "./visual-utils";
+import { lcm, getRoundedRectPath, canShowVisualDiagram } from "./visual-utils";
 import { StepControls } from "./StepControls";
 
 type FractionVisualizerProps = {
@@ -24,12 +25,15 @@ export function FractionVisualizer({
   onStepClick,
   onReplay,
 }: FractionVisualizerProps) {
-  if (!problem.isFraction || !problem.frac1 || !problem.frac2) return null;
+  if (!problem.isFraction || !problem.frac1 || !problem.frac2 || !canShowVisualDiagram(problem)) return null;
 
-  const { operation } = problem;
+  const { operation, showAsMixed } = problem;
   const f1 = problem.frac1;
   const f2 = problem.frac2;
   const ans = problem.fracAnswer;
+  const label1 = formatFractionText(f1, showAsMixed);
+  const label2 = formatFractionText(f2, showAsMixed);
+  const labelAns = ans ? formatFractionText(ans, showAsMixed) : "";
 
   // Common denominator for unified pie visualization (lcm of f1.d and f2.d)
   const commonD = lcm(f1.d, f2.d);
@@ -40,16 +44,27 @@ export function FractionVisualizer({
   if (operation === '+') {
     const totalFilled = c1 + c2;
     const pieCount = Math.max(1, Math.ceil(totalFilled / commonD));
+    const isManyPies = pieCount >= 3;
 
     return (
       <div className="flex flex-col items-center justify-center gap-1.5">
-        <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6 max-w-full">
+        <div className={cn("flex flex-wrap justify-center items-center max-w-full", isManyPies ? "gap-2.5 sm:gap-4" : "gap-4 sm:gap-6")}>
           {Array.from({ length: pieCount }).map((_, pIdx) => {
             const pieStartSlot = pIdx * commonD;
 
             return (
               <div key={`pie-${pIdx}`} className="flex flex-col items-center justify-center">
-                <svg width={130} height={130} viewBox="0 0 130 130" className="drop-shadow-md w-[78px] h-[78px] sm:w-[92px] sm:h-[92px] [@media(max-height:640px)]:w-[60px] [@media(max-height:640px)]:h-[60px]">
+                <svg
+                  width={130}
+                  height={130}
+                  viewBox="0 0 130 130"
+                  className={cn(
+                    "drop-shadow-md",
+                    isManyPies
+                      ? "w-[64px] h-[64px] sm:w-[78px] sm:h-[78px] [@media(max-height:640px)]:w-[52px] [@media(max-height:640px)]:h-[52px]"
+                      : "w-[78px] h-[78px] sm:w-[92px] sm:h-[92px] [@media(max-height:640px)]:w-[60px] [@media(max-height:640px)]:h-[60px]"
+                  )}
+                >
                   {Array.from({ length: commonD }).map((_, i) => {
                     const globalSlotIndex = pieStartSlot + i;
                     const isCyanSlot = globalSlotIndex < c1;
@@ -124,8 +139,8 @@ export function FractionVisualizer({
 
         <StepControls
           steps={[
-            { step: 1, label: `1. Start (${f1.d === 1 ? f1.n : `${f1.n}/${f1.d}`})`, activeColor: "bg-cyan-300 text-cyan-950 border-cyan-200" },
-            { step: 2, label: `2. Add (${f2.d === 1 ? f2.n : `${f2.n}/${f2.d}`})`, activeColor: "bg-amber-300 text-amber-950 border-amber-200" },
+            { step: 1, label: `1. Start (${label1})`, activeColor: "bg-cyan-300 text-cyan-950 border-cyan-200" },
+            { step: 2, label: `2. Add (${label2})`, activeColor: "bg-amber-300 text-amber-950 border-amber-200" },
           ]}
           activeStep={activeStep}
           onStepClick={onStepClick}
@@ -139,16 +154,27 @@ export function FractionVisualizer({
   if (operation === '-') {
     const pieCount = Math.max(1, Math.ceil(c1 / commonD));
     const remaining = Math.max(0, c1 - c2);
+    const isManyPies = pieCount >= 3;
 
     return (
       <div className="flex flex-col items-center justify-center gap-1.5">
-        <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6 max-w-full">
+        <div className={cn("flex flex-wrap justify-center items-center max-w-full", isManyPies ? "gap-2.5 sm:gap-4" : "gap-4 sm:gap-6")}>
           {Array.from({ length: pieCount }).map((_, pIdx) => {
             const pieStartSlot = pIdx * commonD;
 
             return (
               <div key={`pie-${pIdx}`} className="flex flex-col items-center justify-center">
-                <svg width={130} height={130} viewBox="0 0 130 130" className="drop-shadow-md w-[78px] h-[78px] sm:w-[92px] sm:h-[92px] [@media(max-height:640px)]:w-[60px] [@media(max-height:640px)]:h-[60px]">
+                <svg
+                  width={130}
+                  height={130}
+                  viewBox="0 0 130 130"
+                  className={cn(
+                    "drop-shadow-md",
+                    isManyPies
+                      ? "w-[64px] h-[64px] sm:w-[78px] sm:h-[78px] [@media(max-height:640px)]:w-[52px] [@media(max-height:640px)]:h-[52px]"
+                      : "w-[78px] h-[78px] sm:w-[92px] sm:h-[92px] [@media(max-height:640px)]:w-[60px] [@media(max-height:640px)]:h-[60px]"
+                  )}
+                >
                   {Array.from({ length: commonD }).map((_, i) => {
                     const globalSlotIndex = pieStartSlot + i;
                     const isCyanSlot = globalSlotIndex < c1;
@@ -223,8 +249,8 @@ export function FractionVisualizer({
 
         <StepControls
           steps={[
-            { step: 1, label: `1. Start (${f1.d === 1 ? f1.n : `${f1.n}/${f1.d}`})`, activeColor: "bg-cyan-300 text-cyan-950 border-cyan-200" },
-            { step: 2, label: `2. Subtract (${f2.d === 1 ? f2.n : `${f2.n}/${f2.d}`})`, activeColor: "bg-amber-300 text-amber-950 border-amber-200" },
+            { step: 1, label: `1. Start (${label1})`, activeColor: "bg-cyan-300 text-cyan-950 border-cyan-200" },
+            { step: 2, label: `2. Subtract (${label2})`, activeColor: "bg-amber-300 text-amber-950 border-amber-200" },
           ]}
           activeStep={activeStep}
           onStepClick={onStepClick}
@@ -502,8 +528,8 @@ export function FractionVisualizer({
 
         <StepControls
           steps={[
-            { step: 1, label: `1. Start (${f1.d === 1 ? f1.n : `${f1.n}/${f1.d}`})`, activeColor: "bg-cyan-300 text-cyan-950 border-cyan-200" },
-            { step: 2, label: `2. Compare (${f2.d === 1 ? f2.n : `${f2.n}/${f2.d}`})`, activeColor: "bg-amber-300 text-amber-950 border-amber-200" },
+            { step: 1, label: `1. Start (${label1})`, activeColor: "bg-cyan-300 text-cyan-950 border-cyan-200" },
+            { step: 2, label: `2. Compare (${label2})`, activeColor: "bg-amber-300 text-amber-950 border-amber-200" },
           ]}
           activeStep={activeStep}
           onStepClick={onStepClick}

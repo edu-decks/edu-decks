@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FractionDenominatorMode, FractionMaxDenominator, MathOperation, OPERATION_COLORS } from "@/lib/types";
+import { FractionDenominatorMode, FractionMaxDenominator, FractionValueType, MathOperation, OPERATION_COLORS } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,8 @@ type OperationSelectorProps = {
   onFractionDenominatorModeChange?: (mode: FractionDenominatorMode) => void;
   fractionMaxDenominator?: FractionMaxDenominator;
   onFractionMaxDenominatorChange?: (maxD: FractionMaxDenominator) => void;
+  fractionValueType?: FractionValueType;
+  onFractionValueTypeChange?: (valueType: FractionValueType) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onStartQuiz: () => void;
@@ -43,6 +45,8 @@ export function OperationSelector({
   onFractionDenominatorModeChange,
   fractionMaxDenominator = 8,
   onFractionMaxDenominatorChange,
+  fractionValueType = "proper",
+  onFractionValueTypeChange,
   open,
   onOpenChange,
   onStartQuiz,
@@ -241,10 +245,10 @@ export function OperationSelector({
           </div>
 
           {/* Number Range selection (Presets + Custom Option) */}
-          {showWholeNumbers && (
+          {(showWholeNumbers || (showFractions && fractionValueType !== "proper")) && (
             <div>
               <h4 className="font-medium leading-none font-headline text-lg mb-3">
-                Number Range
+                {showFractions ? "Whole Number Range" : "Number Range"}
               </h4>
 
               {/* Presets including Custom */}
@@ -412,6 +416,39 @@ export function OperationSelector({
                 Denominators
               </h4>
               <div className="space-y-3">
+                {/* Fraction Value Type (Proper / Improper / Mixed Numbers / All) */}
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-headline font-bold text-muted-foreground uppercase tracking-wider">
+                    Fraction Values
+                  </Label>
+                  <div className="grid grid-cols-4 gap-1 p-1 bg-muted rounded-2xl">
+                    {(
+                      [
+                        { value: "proper", label: "Proper" },
+                        { value: "improper", label: "Improper" },
+                        { value: "mixed", label: "Mixed #s" },
+                        { value: "all", label: "All" },
+                      ] as const
+                    ).map((item) => {
+                      const isSelected = fractionValueType === item.value;
+                      return (
+                        <Button
+                          key={item.value}
+                          type="button"
+                          variant={isSelected ? "default" : "ghost"}
+                          className={cn(
+                            "rounded-xl font-headline font-bold h-9 text-xs px-1 transition-all",
+                            isSelected ? "shadow-sm" : "text-muted-foreground"
+                          )}
+                          onClick={() => onFractionValueTypeChange?.(item.value)}
+                        >
+                          {item.label}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {/* Denominators Match Mode */}
                 <div className="space-y-1.5">
                   <Label className="text-[11px] font-headline font-bold text-muted-foreground uppercase tracking-wider">

@@ -59,4 +59,31 @@ describe("arithmetic-deck: QuizDisplay", () => {
     fireEvent.click(key9);
     expect(denBox).toHaveTextContent("9");
   });
+
+  it("renders whole number input box alongside numerator and denominator in mixed fraction mode", () => {
+    render(
+      <QuizDisplay
+        activeOperations={["+"]}
+        minRange={1}
+        maxRange={5}
+        showWholeNumbers={false}
+        showFractions={true}
+        fractionDenominatorMode="all"
+        fractionMaxDenominator={8}
+        fractionValueType="mixed"
+        autoPlayAudio={false}
+        onSpeak={vi.fn()}
+        onPlayChime={vi.fn()}
+        onExit={vi.fn()}
+      />
+    );
+
+    const wholeBox = screen.getByLabelText("Whole number input");
+    const numBox = screen.getByLabelText("Numerator input");
+    const denBox = screen.getByLabelText("Denominator input");
+
+    expect(wholeBox).toBeInTheDocument();
+    expect(numBox).toBeInTheDocument();
+    expect(denBox).toBeInTheDocument();
+  });
 });

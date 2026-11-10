@@ -76,4 +76,67 @@ describe("arithmetic-deck: MathCard", () => {
     fireEvent.click(speakBtn);
     expect(onSpeak).toHaveBeenCalledWith("10");
   });
+
+  it("shows improper-to-mixed equivalence badge when flipped on an answer > 1", () => {
+    const improperProblem: MathProblem = {
+      id: "frac-imp-1",
+      num1: 3,
+      num2: 3,
+      operation: "+",
+      answer: 1.5,
+      displayText: "3/4 + 3/4",
+      answerText: "3/2",
+      problemSpeechText: "three fourths plus three fourths",
+      answerSpeechText: "three halves",
+      fullSpeechText: "three fourths plus three fourths equals three halves",
+      speechText: "three fourths plus three fourths",
+      isFraction: true,
+      frac1: { n: 3, d: 4 },
+      frac2: { n: 3, d: 4 },
+      fracAnswer: { n: 3, d: 2 },
+    };
+
+    render(
+      <MathCard
+        problem={improperProblem}
+        isFlipped={true}
+        slideDirection="next"
+        onSpeak={vi.fn()}
+      />
+    );
+
+    expect(screen.getByTestId("mixed-equivalence-badge")).toBeInTheDocument();
+  });
+
+  it("hides hint button when numbers are too high for diagram", () => {
+    const largeFractionProblem: MathProblem = {
+      id: "frac-large-1",
+      num1: 19,
+      num2: 17,
+      operation: "+",
+      answer: 9,
+      displayText: "19/4 + 17/4",
+      answerText: "9",
+      problemSpeechText: "",
+      answerSpeechText: "",
+      fullSpeechText: "",
+      speechText: "",
+      isFraction: true,
+      frac1: { n: 19, d: 4 },
+      frac2: { n: 17, d: 4 },
+      fracAnswer: { n: 9, d: 1 },
+    };
+
+    render(
+      <MathCard
+        problem={largeFractionProblem}
+        isFlipped={false}
+        onToggleHint={vi.fn()}
+        slideDirection="next"
+        onSpeak={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByRole("button", { name: /hint diagram/i })).not.toBeInTheDocument();
+  });
 });

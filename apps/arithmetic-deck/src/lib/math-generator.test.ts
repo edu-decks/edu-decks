@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   simplifyFraction,
+  toMixedParts,
   fractionToWords,
   formatFractionText,
   generateMathProblem,
@@ -55,13 +56,25 @@ describe("arithmetic-deck: math-generator", () => {
       expect(fractionToWords({ n: 2, d: 1 })).toBe("2");
       expect(fractionToWords({ n: 0, d: 1 })).toBe("0");
     });
+
+    it("formats mixed numbers to words when asMixed is true", () => {
+      expect(fractionToWords({ n: 3, d: 2 }, true)).toBe("one and one half");
+      expect(fractionToWords({ n: 11, d: 4 }, true)).toBe("two and three fourths");
+    });
   });
 
-  describe("formatFractionText", () => {
-    it("formats standard fractions and whole fractions", () => {
+  describe("toMixedParts & formatFractionText", () => {
+    it("decomposes improper fractions into whole and remainder parts", () => {
+      expect(toMixedParts({ n: 7, d: 4 })).toEqual({ whole: 1, n: 3, d: 4 });
+      expect(toMixedParts({ n: 5, d: 1 })).toEqual({ whole: 5, n: 0, d: 1 });
+    });
+
+    it("formats standard fractions, improper fractions, and mixed numbers", () => {
       expect(formatFractionText({ n: 3, d: 4 })).toBe("3/4");
       expect(formatFractionText({ n: 1, d: 2 })).toBe("1/2");
       expect(formatFractionText({ n: 5, d: 1 })).toBe("5");
+      expect(formatFractionText({ n: 7, d: 4 }, false)).toBe("7/4");
+      expect(formatFractionText({ n: 7, d: 4 }, true)).toBe("1 3/4");
     });
   });
 
@@ -116,6 +129,24 @@ describe("arithmetic-deck: math-generator", () => {
       }
     });
 
+    it("falls back to 1-12 random numbers for × and ÷ when minRange >= 12", () => {
+      const divisors = new Set<number>();
+      const factors = new Set<number>();
+      for (let i = 0; i < 40; i++) {
+        const divProb = generateMathProblem(["÷"], 100, 999, true, false);
+        expect(divProb.num2).toBeGreaterThanOrEqual(1);
+        expect(divProb.num2).toBeLessThanOrEqual(12);
+        divisors.add(divProb.num2);
+
+        const multProb = generateMathProblem(["×"], 100, 999, true, false);
+        expect(multProb.num1).toBeGreaterThanOrEqual(1);
+        expect(multProb.num1).toBeLessThanOrEqual(12);
+        factors.add(multProb.num1);
+      }
+      expect(divisors.size).toBeGreaterThan(1);
+      expect(factors.size).toBeGreaterThan(1);
+    });
+
     it("generates valid fraction problems when fractions are enabled", () => {
       for (let i = 0; i < 25; i++) {
         const problem = generateMathProblem(["+", "-", "×", "÷"], 1, 10, false, true);
@@ -153,6 +184,22 @@ describe("arithmetic-deck: math-generator", () => {
         expect(problem.isFraction).toBe(true);
         expect(problem.frac1!.d).toBeLessThanOrEqual(4);
         expect(problem.frac2!.d).toBeLessThanOrEqual(4);
+      }
+    });
+
+    it("generates improper and mixed fraction problems with operands > 1", () => {
+      for (let i = 0; i < 20; i++) {
+        const impProb = generateMathProblem(["+", "-", "×", "÷"], 1, 10, false, true, "all", 8, "improper");
+        expect(impProb.isFraction).toBe(true);
+        expect(impProb.fractionValueType).toBe("improper");
+        expect(impProb.showAsMixed).toBe(false);
+        expect(impProb.frac1!.n > impProb.frac1!.d || impProb.frac2!.n > impProb.frac2!.d).toBe(true);
+
+        const mixProb = generateMathProblem(["+", "-", "×", "÷"], 1, 10, false, true, "all", 8, "mixed");
+        expect(mixProb.isFraction).toBe(true);
+        expect(mixProb.fractionValueType).toBe("mixed");
+        expect(mixProb.showAsMixed).toBe(true);
+        expect(mixProb.frac1!.n > mixProb.frac1!.d || mixProb.frac2!.n > mixProb.frac2!.d).toBe(true);
       }
     });
   });

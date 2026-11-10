@@ -62,7 +62,8 @@ export default function MathDeckPage() {
         settings.showWholeNumbers,
         settings.showFractions,
         settings.fractionDenominatorMode,
-        settings.fractionMaxDenominator
+        settings.fractionMaxDenominator,
+        settings.fractionValueType
       ),
     autoPlayAudio: settings.autoPlayAudio,
     isQuizActive,
@@ -84,6 +85,7 @@ export default function MathDeckPage() {
         if (problem.frac2 && problem.frac2.d > settings.fractionMaxDenominator) return false;
         if (settings.fractionDenominatorMode === 'same' && problem.frac1 && problem.frac2 && problem.frac1.d !== problem.frac2.d) return false;
         if (settings.fractionDenominatorMode === 'different' && problem.frac1 && problem.frac2 && problem.frac1.d === problem.frac2.d) return false;
+        if (settings.fractionValueType !== 'all' && problem.fractionValueType && problem.fractionValueType !== settings.fractionValueType) return false;
       } else {
         const safeMin = Math.max(0, settings.minRange);
         const safeMax = Math.max(safeMin + 1, settings.maxRange);
@@ -91,11 +93,11 @@ export default function MathDeckPage() {
           if (problem.num1 < safeMin || problem.num1 > safeMax || problem.num2 < safeMin || problem.num2 > safeMax) return false;
         } else if (problem.operation === '×') {
           const multMax = Math.min(safeMax, 12);
-          const multMin = Math.min(safeMin, multMax);
+          const multMin = safeMin < multMax ? safeMin : 1;
           if (problem.num1 < multMin || problem.num1 > multMax || problem.num2 < multMin || problem.num2 > multMax) return false;
         } else if (problem.operation === '÷') {
           const divMax = Math.min(safeMax, 12);
-          const divMin = Math.max(1, Math.min(safeMin, divMax));
+          const divMin = safeMin < divMax ? Math.max(1, safeMin) : 1;
           if (problem.num2 < divMin || problem.num2 > divMax) return false;
         }
       }
@@ -109,6 +111,7 @@ export default function MathDeckPage() {
       frac: settings.showFractions,
       mode: settings.fractionDenominatorMode,
       maxDenom: settings.fractionMaxDenominator,
+      fracValType: settings.fractionValueType,
     }),
   });
 
@@ -170,6 +173,8 @@ export default function MathDeckPage() {
             onFractionDenominatorModeChange={settings.setFractionDenominatorMode}
             fractionMaxDenominator={settings.fractionMaxDenominator}
             onFractionMaxDenominatorChange={settings.setFractionMaxDenominator}
+            fractionValueType={settings.fractionValueType}
+            onFractionValueTypeChange={settings.setFractionValueType}
             open={isOperationSelectorOpen}
             onOpenChange={handleOperationSelectorOpenChange}
             onStartQuiz={() => setIsQuizActive(true)}
@@ -210,6 +215,7 @@ export default function MathDeckPage() {
             showFractions={settings.showFractions}
             fractionDenominatorMode={settings.fractionDenominatorMode}
             fractionMaxDenominator={settings.fractionMaxDenominator}
+            fractionValueType={settings.fractionValueType}
             autoPlayAudio={settings.autoPlayAudio}
             onSpeak={(text, onEnd) => speak(text, true, onEnd)}
             onPlayChime={playChime}

@@ -2,6 +2,7 @@ import {
   Fraction,
   FractionDenominatorMode,
   FractionMaxDenominator,
+  FractionValueType,
   MathOperation,
   MathProblem,
 } from "./types";
@@ -33,21 +34,56 @@ export function simplifyFraction(n: number, d: number): Fraction {
   };
 }
 
-// Convert fraction to spoken text (e.g. 1/2 -> "one half", 3/4 -> "three fourths")
-export function fractionToWords(f: Fraction): string {
+// Decompose a fraction into whole and remainder parts (e.g. 7/4 -> { whole: 1, n: 3, d: 4 })
+export function toMixedParts(f: Fraction): { whole: number; n: number; d: number } {
+  if (f.d <= 1) {
+    return { whole: f.n, n: 0, d: 1 };
+  }
+  const whole = Math.trunc(f.n / f.d);
+  const remN = Math.abs(f.n % f.d);
+  return { whole, n: remN, d: f.d };
+}
+
+// Convert fraction to spoken text (e.g. 1/2 -> "one half", 3/4 -> "three fourths", 1 1/2 -> "one and one half")
+export function fractionToWords(f: Fraction, asMixed: boolean = false): string {
   if (f.d === 1) return `${f.n}`;
-  const numNames = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
+  const numNames = [
+    "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+    "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"
+  ];
   const denSingular = ["", "whole", "half", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth", "eleventh", "twelfth"];
   const denPlural = ["", "wholes", "halves", "thirds", "fourths", "fifths", "sixths", "sevenths", "eighths", "ninths", "tenths", "elevenths", "twelfths"];
 
-  const nStr = f.n <= 12 ? numNames[f.n] || `${f.n}` : `${f.n}`;
+  if (asMixed && Math.abs(f.n) > f.d) {
+    const { whole, n, d } = toMixedParts(f);
+    if (n === 0) return `${whole}`;
+    const absWhole = Math.abs(whole);
+    const wholeWord = absWhole <= 20 ? numNames[absWhole] || `${absWhole}` : `${absWhole}`;
+    const signedWholeWord = whole < 0 ? `negative ${wholeWord}` : wholeWord;
+    return `${signedWholeWord} and ${fractionToWords({ n, d }, false)}`;
+  }
+
+  const nStr = f.n >= 0 && f.n <= 20 ? numNames[f.n] || `${f.n}` : `${f.n}`;
   const dStr = f.n === 1 ? (denSingular[f.d] || `${f.d}th`) : (denPlural[f.d] || `${f.d}ths`);
   return `${nStr} ${dStr}`;
 }
 
-export function formatFractionText(f: Fraction): string {
+export function formatFractionText(f: Fraction, asMixed: boolean = false): string {
   if (f.d === 1) return `${f.n}`;
+  if (asMixed && Math.abs(f.n) > f.d) {
+    const { whole, n, d } = toMixedParts(f);
+    if (n === 0) return `${whole}`;
+    return `${whole} ${n}/${d}`;
+  }
   return `${f.n}/${f.d}`;
+}
+
+function generateImproperNumerator(d: number, minWhole: number = 1, maxWhole: number = 10): number {
+  const safeMin = Math.max(1, minWhole);
+  const safeMax = Math.max(safeMin, maxWhole);
+  const whole = getRandomInt(safeMin, safeMax);
+  const rem = getRandomInt(1, Math.max(1, d - 1));
+  return whole * d + rem;
 }
 
 export function generateMathProblem(
@@ -57,7 +93,8 @@ export function generateMathProblem(
   showWholeNumbers: boolean = true,
   showFractions: boolean = false,
   fractionDenominatorMode: FractionDenominatorMode = 'all',
-  fractionMaxDenominator: FractionMaxDenominator = 8
+  fractionMaxDenominator: FractionMaxDenominator = 8,
+  fractionValueType: FractionValueType = 'proper'
 ): MathProblem {
   const operations: MathOperation[] = activeOperations.length > 0 ? activeOperations : ['+'];
   const operation = operations[Math.floor(Math.random() * operations.length)];
@@ -73,7 +110,14 @@ export function generateMathProblem(
   }
 
   if (isFraction) {
-    return generateFractionProblem(operation, fractionDenominatorMode, fractionMaxDenominator);
+    return generateFractionProblem(
+      operation,
+      fractionDenominatorMode,
+      fractionMaxDenominator,
+      fractionValueType,
+      minRange,
+      maxRange
+    );
   }
 
   let num1 = 0;
@@ -112,7 +156,7 @@ export function generateMathProblem(
     }
     case '×': {
       const multMax = Math.min(safeMax, 12);
-      const multMin = Math.min(safeMin, multMax);
+      const multMin = safeMin < multMax ? safeMin : 1;
       num1 = getRandomInt(multMin, multMax);
       num2 = getRandomInt(multMin, multMax);
       answer = num1 * num2;
@@ -123,7 +167,7 @@ export function generateMathProblem(
     }
     case '÷': {
       const divMax = Math.min(safeMax, 12);
-      const divMin = Math.max(1, Math.min(safeMin, divMax));
+      const divMin = safeMin < divMax ? Math.max(1, safeMin) : 1;
       num2 = getRandomInt(divMin, divMax);
       const quotient = getRandomInt(0, divMax);
       num1 = num2 * quotient;
@@ -156,8 +200,19 @@ export function generateMathProblem(
 export function generateFractionProblem(
   operation: MathOperation,
   denominatorMode: FractionDenominatorMode = 'all',
-  maxDenominator: FractionMaxDenominator = 8
+  maxDenominator: FractionMaxDenominator = 8,
+  valueType: FractionValueType = 'proper',
+  minRange: number = 1,
+  maxRange: number = 10
 ): MathProblem {
+  const resolvedValueType: 'proper' | 'improper' | 'mixed' =
+    valueType === 'all'
+      ? (['proper', 'improper', 'mixed'] as const)[Math.floor(Math.random() * 3)]
+      : valueType;
+  const showAsMixed = resolvedValueType === 'mixed';
+  const safeMinWhole = Math.max(1, minRange);
+  const safeMaxWhole = Math.max(safeMinWhole, maxRange);
+
   // Clean denominator pairs grouped by maxDenominator and same/different
   const samePairsByMax: Record<FractionMaxDenominator, [number, number][]> = {
     4: [[2, 2], [3, 3], [4, 4]],
@@ -188,8 +243,19 @@ export function generateFractionProblem(
     let d1 = pair[0];
     let d2 = pair[1];
 
-    let n1 = getRandomInt(1, d1 - 1);
-    let n2 = getRandomInt(1, d2 - 1);
+    let n1: number;
+    let n2: number;
+
+    if (resolvedValueType === 'proper') {
+      n1 = getRandomInt(1, d1 - 1);
+      n2 = getRandomInt(1, d2 - 1);
+    } else {
+      const bothImproper = Math.random() < 0.8;
+      const firstImproper = bothImproper || Math.random() < 0.5;
+      const secondImproper = bothImproper || !firstImproper;
+      n1 = firstImproper ? generateImproperNumerator(d1, safeMinWhole, safeMaxWhole) : getRandomInt(1, d1 - 1);
+      n2 = secondImproper ? generateImproperNumerator(d2, safeMinWhole, safeMaxWhole) : getRandomInt(1, d2 - 1);
+    }
 
     const val1 = n1 / d1;
     const val2 = n2 / d2;
@@ -215,21 +281,21 @@ export function generateFractionProblem(
       ? simplifyFraction(convertedFrac1.n + convertedFrac2.n, commonD)
       : simplifyFraction(convertedFrac1.n - convertedFrac2.n, commonD);
 
-    const text1 = formatFractionText(frac1);
-    const text2 = formatFractionText(frac2);
-    const textAns = formatFractionText(fracAnswer);
+    const text1 = formatFractionText(frac1, showAsMixed);
+    const text2 = formatFractionText(frac2, showAsMixed);
+    const textAns = formatFractionText(fracAnswer, showAsMixed);
 
-    const words1 = fractionToWords(frac1);
-    const words2 = fractionToWords(frac2);
-    const wordsAns = fractionToWords(fracAnswer);
+    const words1 = fractionToWords(frac1, showAsMixed);
+    const words2 = fractionToWords(frac2, showAsMixed);
+    const wordsAns = fractionToWords(fracAnswer, showAsMixed);
 
     const opWord = operation === '+' ? "plus" : "minus";
     let problemSpeechText = `${words1} ${opWord} ${words2}`;
     let fullSpeechText = `${words1} ${opWord} ${words2} equals ${wordsAns}`;
 
     if (hasConversion) {
-      const cWords1 = fractionToWords(convertedFrac1);
-      const cWords2 = fractionToWords(convertedFrac2);
+      const cWords1 = fractionToWords(convertedFrac1, false);
+      const cWords2 = fractionToWords(convertedFrac2, false);
       fullSpeechText = `${words1} ${opWord} ${words2} equals ${cWords1} ${opWord} ${cWords2}, which equals ${wordsAns}`;
     }
 
@@ -255,6 +321,8 @@ export function generateFractionProblem(
       convertedFrac1,
       convertedFrac2,
       hasConversion,
+      fractionValueType: resolvedValueType,
+      showAsMixed,
     };
   }
 
@@ -277,8 +345,20 @@ export function generateFractionProblem(
     }
   }
 
-  let n1 = getRandomInt(1, d1 - 1);
-  let n2 = getRandomInt(1, d2 - 1);
+  let n1: number;
+  let n2: number;
+
+  if (resolvedValueType === 'proper') {
+    n1 = getRandomInt(1, d1 - 1);
+    n2 = getRandomInt(1, d2 - 1);
+  } else {
+    const multMaxWhole = Math.max(safeMinWhole, Math.min(safeMaxWhole, 10));
+    const bothImproper = Math.random() < 0.8;
+    const firstImproper = bothImproper || Math.random() < 0.5;
+    const secondImproper = bothImproper || !firstImproper;
+    n1 = firstImproper ? generateImproperNumerator(d1, safeMinWhole, multMaxWhole) : getRandomInt(1, d1 - 1);
+    n2 = secondImproper ? generateImproperNumerator(d2, safeMinWhole, multMaxWhole) : getRandomInt(1, d2 - 1);
+  }
 
   let frac1: Fraction = { n: n1, d: d1 };
   let frac2: Fraction = { n: n2, d: d2 };
@@ -290,13 +370,13 @@ export function generateFractionProblem(
     fracAnswer = simplifyFraction(frac1.n * frac2.d, frac1.d * frac2.n);
   }
 
-  const text1 = formatFractionText(frac1);
-  const text2 = formatFractionText(frac2);
-  const textAns = formatFractionText(fracAnswer);
+  const text1 = formatFractionText(frac1, showAsMixed);
+  const text2 = formatFractionText(frac2, showAsMixed);
+  const textAns = formatFractionText(fracAnswer, showAsMixed);
 
-  const words1 = fractionToWords(frac1);
-  const words2 = fractionToWords(frac2);
-  const wordsAns = fractionToWords(fracAnswer);
+  const words1 = fractionToWords(frac1, showAsMixed);
+  const words2 = fractionToWords(frac2, showAsMixed);
+  const wordsAns = fractionToWords(fracAnswer, showAsMixed);
 
   const opWord = operation === '×' ? "times" : "divided by";
   const problemSpeechText = `${words1} ${opWord} ${words2}`;
@@ -322,5 +402,7 @@ export function generateFractionProblem(
     frac2,
     fracAnswer,
     hasConversion: false,
+    fractionValueType: resolvedValueType,
+    showAsMixed,
   };
 }
