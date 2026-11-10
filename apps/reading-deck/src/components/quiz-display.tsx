@@ -331,15 +331,15 @@ export function QuizDisplay({
       }}
       isPlayingSound={isPlayingSound}
       replayLabel="Replay Sound"
-      contentClassName="max-w-6xl"
+      contentClassName="max-w-4xl sm:max-w-4xl md:max-w-5xl"
       prompt={null}
       input={
         /* Dynamic Options Grid - 4, 6, or 8 options layout */
         <div
           className={cn(
-            "w-full mx-auto flex-1 grid my-auto p-2 min-h-0 items-center",
+            "w-full mx-auto flex-1 grid my-auto py-1 sm:py-2 min-h-0 items-center",
             options.length <= 4
-              ? "max-w-2xl grid-cols-2 gap-3 sm:gap-6 max-h-[72vh]"
+              ? "max-w-2xl portrait:max-w-4xl grid-cols-2 gap-3 sm:gap-6 max-h-[72vh]"
               : options.length <= 6
               ? "max-w-4xl grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 max-h-[78vh]"
               : "max-w-5xl grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 max-h-[82vh]"
@@ -349,39 +349,46 @@ export function QuizDisplay({
             const isSelected = selectedOption === item.value;
             const isSelectedCorrect = isSelected && isCorrect === true;
             const isSelectedIncorrect = isSelected && isCorrect === false;
-            const isSingleChar = item.displayValue.length === 1;
+            const charCount = item.displayValue.length;
+            const isSingleChar = charCount === 1;
             const count = options.length;
 
             const minCardHeight =
               count <= 4 ? "min-h-[22vh]" : count <= 6 ? "min-h-[16vh]" : "min-h-[12vh]";
 
-            const fontSizeClamp =
-              count <= 4
+            const wordCqi =
+              charCount === 2
+                ? 38
+                : charCount === 3
+                ? 34
+                : charCount === 4
+                ? 26
+                : charCount === 5
+                ? 21
+                : 18;
+
+            const maxVh = count <= 4 ? 16 : count <= 6 ? 13 : 10;
+
+            const fontSizeClamp = isSingleChar
+              ? count <= 4
                 ? "clamp(5.5rem, 20vh, 15rem)"
                 : count <= 6
                 ? "clamp(4rem, 14vh, 9rem)"
-                : "clamp(2.8rem, 11vh, 7.5rem)";
-
-            const wordFontSizeClass =
-              count <= 4
-                ? "text-3xl sm:text-5xl md:text-6xl"
-                : count <= 6
-                ? "text-2xl sm:text-4xl md:text-5xl"
-                : "text-xl sm:text-2xl md:text-3xl";
+                : "clamp(2.8rem, 11vh, 7.5rem)"
+              : `clamp(1.75rem, min(${wordCqi}cqi, ${maxVh}vh), 8rem)`;
 
             return (
               <button
                 key={item.value}
                 className={cn(
-                  "h-full w-full rounded-3xl flex items-center justify-center font-headline font-bold shadow-lg transition-all active:scale-95 relative overflow-hidden border-4 border-transparent p-2 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 select-none",
+                  "[container-type:inline-size] h-full w-full rounded-3xl flex items-center justify-center font-headline font-bold shadow-lg transition-all active:scale-95 relative overflow-hidden border-4 border-transparent p-2 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 select-none",
                   minCardHeight,
-                  !isSingleChar && wordFontSizeClass,
                   isSelectedCorrect && "bg-emerald-500 text-white scale-105 border-emerald-400 z-10 shadow-2xl shadow-emerald-500/30",
                   isSelectedIncorrect && "bg-destructive/20 text-destructive border-destructive",
                   !isSelected && "bg-card text-card-foreground hover:bg-accent/30 hover:scale-[1.01]"
                 )}
                 style={{
-                  fontSize: isSingleChar ? fontSizeClamp : undefined,
+                  fontSize: fontSizeClamp,
                   fontWeight: isSingleChar ? 300 : 700,
                   lineHeight: 1,
                   backgroundColor: !isSelected && item.color ? `${item.color}15` : undefined,

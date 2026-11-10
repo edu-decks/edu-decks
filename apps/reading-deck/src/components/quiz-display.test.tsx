@@ -23,4 +23,25 @@ describe("reading-deck: QuizDisplay", () => {
     fireEvent.click(exitBtn);
     expect(onExit).toHaveBeenCalledTimes(1);
   });
+
+  it("scales word option font sizes relative to card width using container query units", () => {
+    const { container } = render(
+      <QuizDisplay
+        gameMode="words"
+        selectedLetters={["f", "e", "d", "b", "i", "t", "u", "g"]}
+        selectedWordLengths={[3]}
+        wordDifficulty="easy"
+        letterCase="lower"
+        optionCount={4}
+        onExit={vi.fn()}
+      />
+    );
+
+    const optionButtons = container.querySelectorAll("button.\\[container-type\\:inline-size\\]");
+    expect(optionButtons.length).toBe(4);
+    optionButtons.forEach((btn) => {
+      const style = (btn as HTMLElement).style.fontSize;
+      expect(style).toContain("34cqi");
+    });
+  });
 });
